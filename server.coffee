@@ -2,6 +2,7 @@ http = require "http"
 fs = require "fs"
 config = require "./config"
 coffee = require "coffee-script"
+io = require "socket.io"
 
 err = (res, code, msg) ->
 	res.writeHead(code, {"Content-type" : "text/html"})
@@ -45,9 +46,6 @@ treat_coffee = (res, data, filename) ->
 	catch error
 		err(res,500,"CoffeScript Compilation Failed: #{error}")
 		
-		
-
-			
 
 srv = http.createServer( (req, res) ->
 	if parse = /^\/static((\/[^.][^\/]*)+)$/.exec(req.url)
@@ -59,4 +57,16 @@ srv = http.createServer( (req, res) ->
 		res.end("404 :(. URL #{req.url}")
 )
 
-srv.listen(1234, "")
+srv.listen(1234)
+
+socket = io.listen(srv)
+
+socket.on("connection", (client) ->
+	client.on("message", (message) ->
+		console.log(message)
+		client.send("BUTTS! #{message}")
+	)
+	client.on("disconnect", (message) ->
+		console.log("DISCONNECTED")
+	)
+)
