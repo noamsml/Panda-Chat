@@ -109,7 +109,7 @@ class ClientHandler
 		
 	
 	handleError: (imsg) ->
-		console.log("err")
+		console.log("err #{imsg.params[0]}")
 	
 	MESSAGE_sendmsg: (wmsg) =>
 		console.log "sending"
@@ -122,7 +122,7 @@ class ClientHandler
 		@ircClient.addListener("001", this.autoJoin)
 		@ircClient.addListener("join", this.handleIRCJoin)
 		@ircClient.addListener("privmsg", this.handleIRCMessage)
-		@ircClient.addListener("error", this.handleIRCMessage)
+		@ircClient.addListener("error", this.handleError)
 		
 		@ircClient.connect()
 		
