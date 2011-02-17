@@ -9,12 +9,22 @@ $(document).ready( ->
 	
 	socket.connect()
 	
+	
+	isScrolledBot = -> $("#msgs").height() <= $("#msgcont").height() + $("#msgcont").scrollTop()
+	
+	scrollBot = -> $("#msgcont").scrollTop($("#msgs").height()-$("#msgcont").height())
+	
 	addMessage = (nick, msg) ->
+		scrbot = isScrolledBot()
 		msg = msg.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 		$("#msgs").append("<b>&lt;#{nick}&gt;</b> #{msg}<br />")
+		console.log(scrbot)
+		if scrbot
+			scrollBot()
 		
 	addEvent = (nick, event) ->
 		$("#msgs").append("*** <i>#{nick} #{event}</i><br/>")
+	
 	
 	events =
 		connect: (msg) ->
@@ -73,24 +83,27 @@ $(document).ready( ->
 	
 	$("#msgForm").submit( (event) ->
 		event.preventDefault()
-		sendmsg({msgType: "sendmsg", content: $("#msgBox").val()})
-		addMessage(window.nick, $("#msgBox").val())
-		$("#msgBox").val('')
+		if $("#msgBox").val()			
+			sendmsg({msgType: "sendmsg", content: $("#msgBox").val()})
+			addMessage(window.nick, $("#msgBox").val())
+			$("#msgBox").val('')
 	)
 	
 	
 	$("#nickForm").submit( (event) ->
 		event.preventDefault()
-		sendmsg({msgType: "connect", nick: $("#nickBox").val()})
-		$("#nickscreen").hide()
-		$("#loadingscreen").show()
-		$("#errmsg").hide()
+		if $("#nickBox").val()
+			sendmsg({msgType: "connect", nick: $("#nickBox").val()})
+			$("#nickscreen").hide()
+			$("#loadingscreen").show()
+			$("#errmsg").hide()
 	)
 	
 	
 	$("#passForm").submit( (event) ->
 		event.preventDefault()
-		sendmsg({msgType: "password", password: $("#passBox").val()})
+		if $("#passBox").val()
+			sendmsg({msgType: "password", password: $("#passBox").val()})
 	)
 	
 )
