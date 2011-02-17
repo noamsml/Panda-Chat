@@ -11,13 +11,21 @@
 	<h1>R U C? I R C!</h1>
 	<div id="msgs" style="height: 300px; border: 1px #000 solid; overflow: auto;"></div>
 	<div style="display:block;">
-	<input name="message" id="msgBox" /><button id="msgBtn">Click me!</button>
+	<form id="msgForm" class="floatcontainer">
+		<input id="msgBox"/><input type="submit" value="Send" id="msgBtn"/>
+	</form>
+	
 	</div>
+</div>
+
+<div id="loadingscreen">
+Loading, please wait.
 </div>
 
 <div id="nickscreen">
 	Nickname: <input id="nickBox" />
 	<button id="nickBtn">Connect! </button>
+	<div id="nickerror">Bad nickname</div>
 </div>
 
 </body>

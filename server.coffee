@@ -167,22 +167,26 @@ class ClientHandler
 		@ircClient?.privmsg(config.channel, wmsg.content)
 	
 	MESSAGE_connect: (wmsg) =>
-		console.log "connecting"
-		console.log wmsg
-		@ircClient = new irc({server: "irc.freenode.net", nick: wmsg.nick})
-		@nick = wmsg.nick
-		
-		@ircClient.addListener("001", this.autoJoin)
-		@ircClient.addListener("join", this.handleIRCJoin)
-		@ircClient.addListener("part", this.handleIRCLeave)
-		@ircClient.addListener("quit", this.handleIRCLeave)
-		@ircClient.addListener("nick", this.handleIRCNick)
-		@ircClient.addListener("kick", this.handleIRCKick)
-		@ircClient.addListener("privmsg", this.handleIRCMessage)
-		@ircClient.addListener("433", this.handleBadNick)
-		@ircClient.addListener("error", this.handleError)
-		
-		@ircClient.connect()
+		if @connected
+			@ircClient.nick(wmsg.nick)
+			@nick = wmsg.nick
+		else
+			console.log "connecting"
+			console.log wmsg
+			@ircClient = new irc({server: "irc.freenode.net", nick: wmsg.nick})
+			@nick = wmsg.nick
+			
+			@ircClient.addListener("001", this.autoJoin)
+			@ircClient.addListener("join", this.handleIRCJoin)
+			@ircClient.addListener("part", this.handleIRCLeave)
+			@ircClient.addListener("quit", this.handleIRCLeave)
+			@ircClient.addListener("nick", this.handleIRCNick)
+			@ircClient.addListener("kick", this.handleIRCKick)
+			@ircClient.addListener("privmsg", this.handleIRCMessage)
+			@ircClient.addListener("433", this.handleBadNick)
+			@ircClient.addListener("error", this.handleError)
+			
+			@ircClient.connect()
 		
 	
 		
