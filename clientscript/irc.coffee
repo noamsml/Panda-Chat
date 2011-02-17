@@ -24,6 +24,6 @@ $(document).ready( ->
 		event.preventDefault()
 		socket.send(JSON.stringify({msgType: "sendmsg", content: $("#msgBox").val()}))
 		addMessage(nickname, $("#msgBox").val())
-		$("#msgBox").empty()
+		$("#msgBox").val('')
 	)
 )
