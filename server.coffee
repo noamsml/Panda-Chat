@@ -70,6 +70,7 @@ class ClientHandler
 		
 		@ircClient = null
 		@nick = null
+		@passworded = null
 		
 		@connected = false
 		
@@ -136,7 +137,7 @@ class ClientHandler
 			wmsg =
 				msgType: "kicked"
 			@connected = false
-			@ircClient.quit("kicked")
+			@ircClient?.quit("kicked")
 		else
 			wmsg =
 				msgType: "kick"
@@ -145,7 +146,6 @@ class ClientHandler
 		this.emitMessage(wmsg)
 		
 	autoJoin: (imsg) =>
-		console.log "joining"
 		@connected = true
 		@ircClient?.join(config.channel, config.key)
 	
@@ -159,15 +159,23 @@ class ClientHandler
 		@ircClient?.quit("Web client closed")
 		@connnected = false
 		
-	
+	handleDisconnect: =>
+		wmsg = 
+			msgType: "disconnected"
+		@connected = false
 	
 	
 	MESSAGE_sendmsg: (wmsg) =>
-		console.log "sending"
-		@ircClient?.privmsg(config.channel, wmsg.content)
+		if @connected
+			console.log "sending"
+			@ircClient?.privmsg(config.channel, wmsg.content)
 	
 	MESSAGE_connect: (wmsg) =>
-		if @connected
+		if not @passworded
+			wmsg_ret = 
+				msgType: "denied"
+			this.emitMessage(wmsg_ret)
+		else if @connected
 			@ircClient.nick(wmsg.nick)
 			@nick = wmsg.nick
 		else
@@ -185,12 +193,20 @@ class ClientHandler
 			@ircClient.addListener("privmsg", this.handleIRCMessage)
 			@ircClient.addListener("433", this.handleBadNick)
 			@ircClient.addListener("error", this.handleError)
+			@ircClient.addListener("disconnect", this.handleDisconnect)
 			
 			@ircClient.connect()
-		
-	
-		
-		
+	MESSAGE_password: (wmsg) =>
+		if config.password == wmsg.password
+			#console.log("AUTH'D")
+			@passworded = true
+			wmsg_ret =
+				msgType: "auth"
+		else
+			#console.log("NOAUTH #{wmsg.password}")
+			wmsg_ret =
+				msgType: "noAuth"
+		this.emitMessage(wmsg_ret)
 
 
 

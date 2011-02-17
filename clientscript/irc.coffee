@@ -12,6 +12,9 @@ $(document).ready( ->
 	addMessage = (nick, msg) ->
 		msg = msg.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 		$("#msgs").append("<b>&lt;#{nick}&gt;</b> #{msg}<br />")
+		
+	addEvent = (nick, event) ->
+		$("#msgs").append("*** <i>#{nick} #{event}</i><br/>")
 	
 	events =
 		connect: (msg) ->
@@ -27,7 +30,31 @@ $(document).ready( ->
 			#TODO: handle nick changes
 			$("#loadingscreen").hide()
 			$("#nickscreen").show()
-			$("#nickerror").show()
+			$("#errmsg").text("Bad nickname")
+			$("#errmsg").show()
+		join: (msg) ->
+			addEvent(msg.nick, "joined the channel")
+		leave: (msg) ->
+			addEvent(msg.nick, "left the channel")
+		kick: (msg) ->
+			addEvent(msg.nick, "was kicked by #{msg.op}")
+		disconnected: (msg) ->
+			$("#errmsg").text("You have been disconnected")
+			$("#errmsg").show()
+		kicked: (msg) ->
+			$("#errmsg").text("You have been kicked from the channel")
+			$("#errmsg").show()
+		nick: (msg) ->
+			addEvent(msg.oldnick, "is now known as #{msg.newnick}")
+		auth: (msg) ->
+			$("#passscreen").hide()
+			$("#nickscreen").show()
+			$("#errmsg").hide()
+		noAuth: (msg) ->
+			$("#errmsg").text("Wrong password")
+			$("#errmsg").show()
+			
+				
 		
 	
 	sendmsg = (msg) ->
@@ -40,7 +67,7 @@ $(document).ready( ->
 
 	socket.on("connect", ->
 		window.ircState = istate_nick
-		$("#nickscreen").show()
+		$("#passscreen").show()	
 	)
 
 	
@@ -52,16 +79,18 @@ $(document).ready( ->
 	)
 	
 	
-	
-	
-	$("#nickBtn").click( (event) ->
+	$("#nickForm").submit( (event) ->
 		event.preventDefault()
 		sendmsg({msgType: "connect", nick: $("#nickBox").val()})
 		$("#nickscreen").hide()
 		$("#loadingscreen").show()
+		$("#errmsg").hide()
 	)
 	
 	
-	$("#nickscreen").show()	
+	$("#passForm").submit( (event) ->
+		event.preventDefault()
+		sendmsg({msgType: "password", password: $("#passBox").val()})
+	)
 	
 )
