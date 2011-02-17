@@ -2,14 +2,23 @@
 <head>
 <script src="http://ajax.microsoft.com/ajax/jquery/jquery-1.5.min.js" type="text/javascript"> </script>
 <script src="/socket.io/socket.io.js" type="text/javascript" /></script>
- <script src="/script/test.js" type="text/javascript" /> </script>
+ <script src="/script/irc.js" type="text/javascript" /> </script>
+ <link href="/static/style.css" rel="stylesheet" />
 <title>HAHA</title>
 </head>
 <body>
-<h1>Hello world!</h1>
-<div id="msgs" style="height: 300px; border: 1px #000 solid; overflow: auto;"></div>
-<div style="display:block;">
-<input name="message" id="msgBox" /><button id="msgBtn">Click me!</button>
+<div id="msgscreen">
+	<h1>R U C? I R C!</h1>
+	<div id="msgs" style="height: 300px; border: 1px #000 solid; overflow: auto;"></div>
+	<div style="display:block;">
+	<input name="message" id="msgBox" /><button id="msgBtn">Click me!</button>
+	</div>
 </div>
+
+<div id="nickscreen">
+	Nickname: <input id="nickBox" />
+	<button id="nickBtn">Connect! </button>
+</div>
+
 </body>
 </html>

@@ -69,11 +69,14 @@ class ClientHandler
 	constructor: (@webClient) ->
 		
 		@ircClient = null
+		@nick = null
 		
 		@connected = false
 		
 		@webClient.on("message", this.handleWebMessage)
 		@webClient.on("disconnect", this.quit)
+		
+		
 		
 		
 	handleWebMessage: (wmsg) =>
@@ -82,18 +85,63 @@ class ClientHandler
 			this["MESSAGE_" + message.msgType](message)
 		else
 			console.log("Bad message")
+	
 	handleIRCMessage: (imsg) =>
 			console.log("MESSAGE")
 			wmsg = 
 				msgType: "ircmsg"
 				content: imsg.params[1]
-				from: imsg.person.nick
+				nick: imsg.person.nick
 			this.emitMessage(wmsg)
-			
+	
+	
 	handleIRCJoin: (imsg) =>
-		console.log("JOINED")
+		if imsg.person.nick == @nick
+			wmsg = 
+				msgType: "connect"
+				nick: @nick
+		else
+			wmsg = 
+				msgType: "join"
+				nick: imsg.person.nick
+		this.emitMessage(wmsg)
+	
+	handleBadNick: (imsg) =>
 		wmsg = 
-			msgType: "connect"
+			msgType: "badnick"
+			nick: imsg.params[1]
+		this.emitMessage(wmsg)
+	
+	handleIRCNick: (imsg) =>
+		if imsg.person.nick == @nick
+			@nick = imsg.params[0]
+			wmsg =
+				msgType: "changeNick"
+				nick: imsg.params[1]
+		else
+			wmsg =
+				msgType: "nick"
+				newnick: imsg.params[1]
+				oldnick: imsg.person.nick
+		this.emitMessage(wmsg)
+	
+	handleIRCLeave: (imsg) =>
+		wmsg =
+			msgType: "leave"
+			nick: imsg.person.nick
+		this.emitMessage(wmsg)
+	
+	handleIRCKick: (imsg) =>
+		if imsg.params[1] == @nick
+			wmsg =
+				msgType: "kicked"
+			@connected = false
+			@ircClient.quit("kicked")
+		else
+			wmsg =
+				msgType: "kick"
+				op: imsg.person.nick
+				nick: imsg.params[1]
 		this.emitMessage(wmsg)
 		
 	autoJoin: (imsg) =>
@@ -101,15 +149,18 @@ class ClientHandler
 		@connected = true
 		@ircClient?.join(config.channel, config.key)
 	
+	handleError: (imsg) ->
+		console.log("err #{imsg.params[0]}")
+	
 	emitMessage: (message) ->
 		@webClient.send(JSON.stringify(message))
 	
 	quit: () =>
 		@ircClient?.quit("Web client closed")
+		@connnected = false
 		
 	
-	handleError: (imsg) ->
-		console.log("err #{imsg.params[0]}")
+	
 	
 	MESSAGE_sendmsg: (wmsg) =>
 		console.log "sending"
@@ -117,11 +168,18 @@ class ClientHandler
 	
 	MESSAGE_connect: (wmsg) =>
 		console.log "connecting"
+		console.log wmsg
 		@ircClient = new irc({server: "irc.freenode.net", nick: wmsg.nick})
+		@nick = wmsg.nick
 		
 		@ircClient.addListener("001", this.autoJoin)
 		@ircClient.addListener("join", this.handleIRCJoin)
+		@ircClient.addListener("part", this.handleIRCLeave)
+		@ircClient.addListener("quit", this.handleIRCLeave)
+		@ircClient.addListener("nick", this.handleIRCNick)
+		@ircClient.addListener("kick", this.handleIRCKick)
 		@ircClient.addListener("privmsg", this.handleIRCMessage)
+		@ircClient.addListener("433", this.handleBadNick)
 		@ircClient.addListener("error", this.handleError)
 		
 		@ircClient.connect()
