@@ -192,7 +192,7 @@ class ClientHandler
 			@ircClient = new irc({server: "irc.freenode.net", nick: wmsg.nick})
 			@nick = wmsg.nick
 			
-			@ircClient.addListener("001", this.autoJoin)
+			@ircClient.addListener("376", this.autoJoin)
 			@ircClient.addListener("join", this.handleIRCJoin)
 			@ircClient.addListener("part", this.handleIRCLeave)
 			@ircClient.addListener("quit", this.handleIRCLeave)
