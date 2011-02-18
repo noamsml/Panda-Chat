@@ -24,7 +24,15 @@ $(document).ready( ->
 		
 	addEvent = (nick, event) ->
 		$("#msgs").append("*** <i>#{nick} #{event}</i><br/>")
+
+
+	addNick = (nick) ->
+		nick2 = nick.replace("\"", "@")
+		$("#nicks").append("<li data-nickname=\"#{nick2}\">#{nick}</li>")
 	
+	delNick = (nick) ->
+		nick2 = nick.replace("\"", "@")
+		$("li[data-nickname=\"#{nick2}\"]").remove()
 	
 	events =
 		connect: (msg) ->
@@ -43,10 +51,13 @@ $(document).ready( ->
 			$("#errmsg").text("Bad nickname")
 			$("#errmsg").show()
 		join: (msg) ->
+			addNick(msg.nick)
 			addEvent(msg.nick, "joined the channel")
 		leave: (msg) ->
+			delNick(msg.nick)
 			addEvent(msg.nick, "left the channel")
 		kick: (msg) ->
+			delNick(msg.nick)
 			addEvent(msg.nick, "was kicked by #{msg.op}")
 		disconnected: (msg) ->
 			$("#errmsg").text("You have been disconnected")
@@ -55,6 +66,8 @@ $(document).ready( ->
 			$("#errmsg").text("You have been kicked from the channel")
 			$("#errmsg").show()
 		nick: (msg) ->
+			delNick(msg.oldnick)
+			addNick(msg.newnick)
 			addEvent(msg.oldnick, "is now known as #{msg.newnick}")
 		auth: (msg) ->
 			$("#passscreen").hide()
@@ -63,6 +76,9 @@ $(document).ready( ->
 		noAuth: (msg) ->
 			$("#errmsg").text("Wrong password")
 			$("#errmsg").show()
+		names: (msg) ->
+			for nick in msg.nicks
+				addNick(nick)
 			
 				
 		

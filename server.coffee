@@ -101,6 +101,12 @@ class ClientHandler
 			wmsg = 
 				msgType: "connect"
 				nick: @nick
+			@ircClient?.names(config.channel, (ch, names) =>
+				wmsg = 
+					msgType: "names"
+					nicks: names
+				this.emitMessage(wmsg)
+			)
 		else
 			wmsg = 
 				msgType: "join"
