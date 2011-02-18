@@ -55,12 +55,14 @@ treat_coffee = (res, data, filename) ->
 		
 
 srv = http.createServer( (req, res) ->
-	if parse = /^\/static((\/[^.][^\/]*)+)$/.exec(req.url)
+	if req.url == "/"
+		fetch_file("html/index.html", res, treat_static)
+	else if parse = /^\/static((\/[^.][^\/]*)+)$/.exec(req.url)
 		fetch_file("html/#{parse[1]}", res, treat_static)
 	else if parse = /^\/script((\/[^.][^\/]*)+)[.]js$/.exec(req.url)
 		fetch_file("clientscript/#{parse[1]}.coffee", res, treat_coffee)
 	else
-		err(res, 404, "Not found")
+		err(res, 404, "Was Not found '#{req.url}'")
 )
 
 #STUFF TO DO WITH HANDLING IRC
@@ -216,7 +218,7 @@ class ClientHandler
 
 
 
-srv.listen(1234, "")
+srv.listen(config.httport, "")
 
 socket = io.listen(srv)
 
