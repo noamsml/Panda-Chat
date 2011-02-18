@@ -128,7 +128,7 @@ class ClientHandler
 		else
 			wmsg =
 				msgType: "nick"
-				newnick: imsg.params[1]
+				newnick: imsg.params[0]
 				oldnick: imsg.person.nick
 		this.emitMessage(wmsg)
 	
@@ -216,7 +216,7 @@ class ClientHandler
 
 
 
-srv.listen(1234)
+srv.listen(1234, "")
 
 socket = io.listen(srv)
 

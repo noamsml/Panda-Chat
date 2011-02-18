@@ -5,7 +5,7 @@ $(document).ready( ->
 	
 	window.ircState = istate_conn
 	
-	socket = new io.Socket("localhost")
+	socket = new io.Socket()
 	
 	socket.connect()
 	
