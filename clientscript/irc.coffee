@@ -4,7 +4,7 @@ $(document).ready( ->
 	
 	socket.connect()
 	
-	
+	window.lastnick = null
 	isScrolledBot = -> $("#msgs").height() <= $("#msgcont").height() + $("#msgcont").scrollTop()
 	
 	scrollBot = -> $("#msgcont").scrollTop($("#msgs").height()-$("#msgcont").height())
@@ -15,7 +15,10 @@ $(document).ready( ->
 		scrbot = isScrolledBot()
 		msg = treatHTML(msg)
 		nick = person.nick
-		$("#msgs").append("<b>#{nick} (#{person.position}):</b> #{msg}<br />")
+		if nick != window.lastnick
+			$("#msgs").append("<div class='nickline floatcontainer'>#{nick} <span class='meta'>#{person.position}, #{person.campus}<br />")
+		$("#msgs").append("<div class='message'>#{msg}</div>")
+		window.lastnick = nick
 		console.log(scrbot)
 		if scrbot
 			scrollBot()
@@ -23,6 +26,7 @@ $(document).ready( ->
 	addEvent = (person, event) ->
 		nick = person.nick
 		$("#msgs").append("*** <i>#{nick} #{event}</i><br/>")
+		window.lastnick = null
 
 
 	addPerson = (person) ->

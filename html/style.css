@@ -78,6 +78,8 @@ display: none; /*Yes, this is how I remove elemnts*/
 	border: #aaa 2px solid;
 	width: 800px;
 	float: left;
+	padding-left: 10px;
+	padding-right: 10px;
 }
 
 #nicks
@@ -96,6 +98,29 @@ display: none; /*Yes, this is how I remove elemnts*/
 }
 
 
+
+.nickline
+{
+	border-bottom: 2px #000 solid;
+	margin-bottom: 4px;
+	margin-top: 7px;
+	color: #000;
+}
+
+.meta
+{
+	color: #888;
+	margin-left: 50px;
+	float: right;
+}
+
+.message
+{
+	border-left: #bbb 4px solid;
+	padding-left: 5px;
+	background-color: #ebebeb;
+	margin-left: 10px;
+}
 
 /*floatcontainer example taken from csscreator.com*/
 
