@@ -105,15 +105,16 @@ class ClientHandler
 
 	
 	disconnect: () =>
-		channel.delClient(this)
-		cevent = 
-			eventType: "leave"
-			person: @person
-		channel.event(cevent, this)
+		if @person
+			channel.delClient(this)
+			cevent = 
+				eventType: "leave"
+				person: @person
+			channel.event(cevent, this)
 		
 	
 	MESSAGE_sendmsg: (wmsg) =>
-		if @passworded and @person
+		if @person
 			cevent =
 				eventType: "message"
 				person: @person

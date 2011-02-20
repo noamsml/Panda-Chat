@@ -37,6 +37,16 @@ body
 }
 
 
+#passscreen, #nickscreen
+{
+	width: 400px;
+	background-color: #eee;
+	margin-top: 150px;
+	margin-left: auto;
+	margin-right: auto;
+	padding: 100px;
+}
+
 #msgBox
 {
 width: 83%;

@@ -15,7 +15,7 @@ $(document).ready( ->
 		scrbot = isScrolledBot()
 		msg = treatHTML(msg)
 		nick = person.nick
-		$("#msgs").append("<b>&lt;#{nick}&gt;</b> #{msg}<br />")
+		$("#msgs").append("<b>#{nick} (#{person.position}):</b> #{msg}<br />")
 		console.log(scrbot)
 		if scrbot
 			scrollBot()
@@ -39,8 +39,7 @@ $(document).ready( ->
 		connected: (msg) ->
 			console.log(msg)
 			window.person = msg.person
-			$("#loadingscreen").hide()
-			$("#msgscreen").show()
+			$("#msgscreen").slideDown()
 			$("#msgBox").focus()
 		message: (msg) ->
 			addMessage(msg.person, msg.content)
@@ -48,7 +47,7 @@ $(document).ready( ->
 			#for now
 			#TODO: handle nick changes
 			$("#loadingscreen").hide()
-			$("#nickscreen").show()
+			$("#nickscreen").slideDown()
 			$("#errmsg").text("Bad nickname")
 			$("#errmsg").show()
 		join: (msg) ->
@@ -71,8 +70,9 @@ $(document).ready( ->
 		#	addNick(msg.newnick)
 		#	addEvent(msg.oldnick, "is now known as #{msg.newnick}")
 		auth: (msg) ->
-			$("#passscreen").hide()
-			$("#nickscreen").show()
+			$("#passscreen").slideUp()
+			$("#nickscreen").slideDown()
+			$("#nickBox").focus()
 			$("#errmsg").hide()
 		noAuth: (msg) ->
 			$("#errmsg").text("Wrong password")
@@ -94,7 +94,8 @@ $(document).ready( ->
 	)
 
 	socket.on("connect", ->
-		$("#passscreen").show()	
+		$("#passscreen").show()
+		$("#passbox").focus()	
 	)
 
 	
@@ -109,9 +110,13 @@ $(document).ready( ->
 	
 	$("#nickForm").submit( (event) ->
 		event.preventDefault()
+		pers = 
+			nick: $("#nickBox").val()
+			position: $("#posBox").val()
+			campus: $("#campBox").val()
 		if $("#nickBox").val()
-			sendmsg({msgType: "connect", person: { nick: $("#nickBox").val() }})
-			$("#nickscreen").hide()
+			sendmsg({msgType: "connect", person: pers})
+			$("#nickscreen").slideUp()
 			$("#loadingscreen").show()
 			$("#errmsg").hide()
 	)
