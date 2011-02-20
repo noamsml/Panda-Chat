@@ -1,23 +1,11 @@
-html
-{
-	height: 100%;
-	padding: 0;
-	margin: 0;
-}
 
-body
-{
-	height: 100%;
-	padding: 0;
-	margin: 0;
-	padding-left: 10px;
-	padding-right: 10px;
-}
 
 #msgscreen
 {
 	display: none;
-	height: 100%;
+	margin:auto;
+	width: 1000px;
+	/*height: 100%;*/
 }
 
 #nickscreen
@@ -49,35 +37,33 @@ body
 
 #msgBox
 {
-width: 83%;
+width: 1000px;
 float:left;
-height: 2em;
 border: 1px #888 solid;
 
 }
 
-h1
+#msgcont,#msguppercont
 {
-	height: 10%;
+	height: 500px;
 }
 
 #msguppercont
 {
-	height: 75%;
+margin-bottom: 20px;
 }
 
 #msgBtn
 {
-width: 15%;
-height: 2em;
+width: 50px;
 float: right;
 border: 1px #000 solid;
+display: none; /*Yes, this is how I remove elemnts*/
 }
 
 #msgForm
 {
-	padding-top: 1%;
-	height: 10%;
+	/*padding-top: 2em;*/
 }
 
 #errmsg
@@ -88,16 +74,15 @@ border: 1px #000 solid;
 
 #msgcont
 {
-	height: 500px;
 	overflow: auto;
 	border: #aaa 2px solid;
-	width: 83%;
+	width: 800px;
 	float: left;
 }
 
 #nicks
 {
-	width: 13%;
+	width: 120px;
 	float:right;
 	list-style: none;
 	display:block;

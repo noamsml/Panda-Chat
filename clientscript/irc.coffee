@@ -39,6 +39,7 @@ $(document).ready( ->
 		connected: (msg) ->
 			console.log(msg)
 			window.person = msg.person
+			$("#loadingscreen").hide()
 			$("#msgscreen").slideDown()
 			$("#msgBox").focus()
 		message: (msg) ->
