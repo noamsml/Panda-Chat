@@ -3,12 +3,26 @@ fs = require "fs"
 config = require "./config"
 coffee = require "coffee-script"
 io = require "socket.io"
-irc = require "irc-js"
+events = require "events"
 
 gl = exports #globals
 
-
-connections = []
+class Channel
+	constructor: ->
+		@connections = {}
+		@channelEvents = new events.EventEmitter()
+		#@channelEvents.setMaxListeners(0) #CHECK THIS
+	addClient: (client) ->
+		@connections[client.person.nick] = client
+		@channelEvents.on("channelevent", client.handleChannelEvent)
+	delClient: (client) ->
+		delete @connections[client.person.nick]
+		@channelEvents.removeListener("channelevent", client.handleChannelEvent)
+	nickAvail: (nick) -> not (nick of @connections) and (nick.length < 20) and not /[<>@&+]/.test(nick)
+	event: (ev, source) -> @channelEvents.emit("channelevent", ev, source)
+	names: -> @connections[conn].person for conn of @connections
+	
+channel = new Channel()
 
 # STUFF TO DO WITH SERVING FILES
 err = (res, code, msg) ->
@@ -69,18 +83,11 @@ srv = http.createServer( (req, res) ->
 
 class ClientHandler
 	constructor: (@webClient) ->
-		
-		@ircClient = null
-		@nick = null
-		@passworded = null
-		
-		@connected = false
+		@person = null #also used to check if you're in the channel
+		@passworded = false
 		
 		@webClient.on("message", this.handleWebMessage)
-		@webClient.on("disconnect", this.quit)
-		
-		
-		
+		@webClient.on("disconnect", this.disconnect)
 		
 	handleWebMessage: (wmsg) =>
 		message = JSON.parse(wmsg)
@@ -89,132 +96,76 @@ class ClientHandler
 		else
 			console.log("Bad message")
 	
-	handleIRCMessage: (imsg) =>
-			console.log("MESSAGE")
-			wmsg = 
-				msgType: "ircmsg"
-				content: imsg.params[1]
-				nick: imsg.person.nick
-			this.emitMessage(wmsg)
-	
-	
-	handleIRCJoin: (imsg) =>
-		if imsg.person.nick == @nick
-			wmsg = 
-				msgType: "connect"
-				nick: @nick
-			@ircClient?.names(config.channel, (ch, names) =>
-				wmsg = 
-					msgType: "names"
-					nicks: names
-				this.emitMessage(wmsg)
-			)
+	handleChannelEvent: (chevent, source) =>
+		if source != this
+			this.emitMessage(chevent)
 		else
-			wmsg = 
-				msgType: "join"
-				nick: imsg.person.nick
-		this.emitMessage(wmsg)
+			console.log("Message ignored by #{@person.nick}")
+			console.log(chevent)
+
 	
-	handleBadNick: (imsg) =>
-		wmsg = 
-			msgType: "badnick"
-			nick: imsg.params[1]
-		this.emitMessage(wmsg)
-	
-	handleIRCNick: (imsg) =>
-		if imsg.person.nick == @nick
-			@nick = imsg.params[0]
-			wmsg =
-				msgType: "changeNick"
-				nick: imsg.params[1]
-		else
-			wmsg =
-				msgType: "nick"
-				newnick: imsg.params[0]
-				oldnick: imsg.person.nick
-		this.emitMessage(wmsg)
-	
-	handleIRCLeave: (imsg) =>
-		wmsg =
-			msgType: "leave"
-			nick: imsg.person.nick
-		this.emitMessage(wmsg)
-	
-	handleIRCKick: (imsg) =>
-		if imsg.params[1] == @nick
-			wmsg =
-				msgType: "kicked"
-			@connected = false
-			@ircClient?.quit("kicked")
-		else
-			wmsg =
-				msgType: "kick"
-				op: imsg.person.nick
-				nick: imsg.params[1]
-		this.emitMessage(wmsg)
+	disconnect: () =>
+		channel.delClient(this)
+		cevent = 
+			eventType: "leave"
+			person: @person
+		channel.event(cevent, this)
 		
-	autoJoin: (imsg) =>
-		@connected = true
-		@ircClient?.join(config.channel, config.key)
-	
-	handleError: (imsg) ->
-		console.log("err #{imsg.params[0]}")
-	
-	emitMessage: (message) ->
-		@webClient.send(JSON.stringify(message))
-	
-	quit: () =>
-		@ircClient?.quit("Web client closed")
-		@connnected = false
-		
-	handleDisconnect: =>
-		wmsg = 
-			msgType: "disconnected"
-		@connected = false
-	
 	
 	MESSAGE_sendmsg: (wmsg) =>
-		if @connected
-			console.log "sending"
-			@ircClient?.privmsg(config.channel, wmsg.content)
+		if @passworded and @person
+			cevent =
+				eventType: "message"
+				person: @person
+				content: wmsg.content
+			channel.event(cevent, this)
+				
 	
 	MESSAGE_connect: (wmsg) =>
 		if not @passworded
 			wmsg_ret = 
-				msgType: "denied"
-			this.emitMessage(wmsg_ret)
-		else if @connected
-			@ircClient.nick(wmsg.nick)
-			@nick = wmsg.nick
+				eventType: "denied"
 		else
-			console.log "connecting"
-			console.log wmsg
-			@ircClient = new irc({server: "irc.freenode.net", nick: wmsg.nick})
-			@nick = wmsg.nick
+			if channel.nickAvail(wmsg.person.nick)
+				@person = wmsg.person
+				channel.addClient(this)
+				wmsg_ret =
+					eventType: "connected"
+					person: @person
+				
+				this.emitMessage(wmsg_ret)
+				
+				cevent = 
+					eventType: "join"
+					person: @person
+				channel.event(cevent,this)
+				
+				wmsg_ret = 
+					eventType: "names"
+					names: channel.names()
+			else
+				wmsg_ret =
+					eventType: "badNick"
+					person: @person
+		this.emitMessage(wmsg_ret)
 			
-			@ircClient.addListener("376", this.autoJoin)
-			@ircClient.addListener("join", this.handleIRCJoin)
-			@ircClient.addListener("part", this.handleIRCLeave)
-			@ircClient.addListener("quit", this.handleIRCLeave)
-			@ircClient.addListener("nick", this.handleIRCNick)
-			@ircClient.addListener("kick", this.handleIRCKick)
-			@ircClient.addListener("privmsg", this.handleIRCMessage)
-			@ircClient.addListener("433", this.handleBadNick)
-			@ircClient.addListener("error", this.handleError)
-			@ircClient.addListener("disconnect", this.handleDisconnect)
 			
-			@ircClient.connect()
+			
+			
 	MESSAGE_password: (wmsg) =>
 		if config.password == wmsg.password
 			#console.log("AUTH'D")
 			@passworded = true
 			wmsg_ret =
-				msgType: "auth"
+				eventType: "auth"
 		else
 			#console.log("NOAUTH #{wmsg.password}")
 			wmsg_ret =
-				msgType: "noAuth"
+				eventType: "noAuth"
 		this.emitMessage(wmsg_ret)
+		
+	emitMessage: (message) ->
+		@webClient.send(JSON.stringify(message))
 
 
 
