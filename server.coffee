@@ -4,6 +4,7 @@ config = require "./config"
 coffee = require "coffee-script"
 io = require "socket.io"
 events = require "events"
+webclient = require "./webclient"
 
 gl = exports #globals
 
@@ -79,101 +80,11 @@ srv = http.createServer( (req, res) ->
 		err(res, 404, "Was Not found '#{req.url}'")
 )
 
-#STUFF TO DO WITH HANDLING IRC
-
-class ClientHandler
-	constructor: (@webClient) ->
-		@person = null #also used to check if you're in the channel
-		@passworded = false
-		
-		@webClient.on("message", this.handleWebMessage)
-		@webClient.on("disconnect", this.disconnect)
-		
-	handleWebMessage: (wmsg) =>
-		message = JSON.parse(wmsg)
-		if this["MESSAGE_" + message.msgType]?
-			this["MESSAGE_" + message.msgType](message)
-		else
-			console.log("Bad message")
-	
-	handleChannelEvent: (chevent, source) =>
-		if source != this
-			this.emitMessage(chevent)
-		else
-			console.log("Message ignored by #{@person.nick}")
-			console.log(chevent)
-
-	
-	disconnect: () =>
-		if @person
-			channel.delClient(this)
-			cevent = 
-				eventType: "leave"
-				person: @person
-			channel.event(cevent, this)
-		
-	
-	MESSAGE_sendmsg: (wmsg) =>
-		if @person
-			cevent =
-				eventType: "message"
-				person: @person
-				content: wmsg.content
-			channel.event(cevent, this)
-				
-	
-	MESSAGE_connect: (wmsg) =>
-		if not @passworded
-			wmsg_ret = 
-				eventType: "denied"
-		else
-			if channel.nickAvail(wmsg.person.nick)
-				@person = wmsg.person
-				channel.addClient(this)
-				wmsg_ret =
-					eventType: "connected"
-					person: @person
-				
-				this.emitMessage(wmsg_ret)
-				
-				cevent = 
-					eventType: "join"
-					person: @person
-				channel.event(cevent,this)
-				
-				wmsg_ret = 
-					eventType: "names"
-					names: channel.names()
-			else
-				wmsg_ret =
-					eventType: "badNick"
-					person: @person
-		this.emitMessage(wmsg_ret)
-			
-			
-			
-			
-	MESSAGE_password: (wmsg) =>
-		if config.password == wmsg.password
-			#console.log("AUTH'D")
-			@passworded = true
-			wmsg_ret =
-				eventType: "auth"
-		else
-			#console.log("NOAUTH #{wmsg.password}")
-			wmsg_ret =
-				eventType: "noAuth"
-		this.emitMessage(wmsg_ret)
-		
-	emitMessage: (message) ->
-		@webClient.send(JSON.stringify(message))
-
-
 
 srv.listen(config.httport, "")
 
 socket = io.listen(srv)
 
 socket.on("connection", (client) ->
-	z = new ClientHandler(client)
+	z = new webclient.ClientHandler(client, channel)
 )
