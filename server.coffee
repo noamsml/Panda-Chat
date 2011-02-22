@@ -86,5 +86,5 @@ srv.listen(config.httport, "")
 socket = io.listen(srv)
 
 socket.on("connection", (client) ->
-	z = new webclient.ClientHandler(client, channel)
+	z = new webclient.ClientHandler(client, channel, config)
 )
