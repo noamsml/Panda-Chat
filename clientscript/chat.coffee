@@ -5,6 +5,9 @@ $(document).ready( ->
 	socket.connect()
 	
 	window.lastnick = null
+	
+	window.nicklist = [] #we start with a naive implementation, and optimize it later
+	
 	isScrolledBot = -> $("#msgs").height() <= $("#msgcont").height() + $("#msgcont").scrollTop()
 	
 	scrollBot = -> $("#msgcont").scrollTop($("#msgs").height()-$("#msgcont").height())
@@ -33,11 +36,14 @@ $(document).ready( ->
 		nick = person.nick
 		nick2 = nick.replace("\"", "@")
 		$("#nicks").append("<li data-nickname=\"#{nick2}\">#{nick}</li>")
+		#INEFFICIENT, OPTIMIZE
+		window.nicklist.push(nick)
 	
 	delPerson = (person) ->
 		nick = person.nick
 		nick2 = nick.replace("\"", "@")
 		$("li[data-nickname=\"#{nick2}\"]").remove()
+		window.nicklist = window.nicklist.filter((n) -> n != nick) 
 	
 	events =
 		connected: (msg) ->
@@ -102,6 +108,8 @@ $(document).ready( ->
 		$("#passscreen").show()
 		$("#passbox").focus()	
 	)
+	
+	
 
 	
 	$("#msgForm").submit( (event) ->
@@ -132,5 +140,26 @@ $(document).ready( ->
 		if $("#passBox").val()
 			sendmsg({msgType: "password", password: $("#passBox").val()})
 	)
+	
+	$("#msgBox").keydown( (event) ->
+		if (event.which == 9)
+			event.preventDefault()
+			curloc = $("#msgBox").caret().start
+			before = $("#msgBox").val().substring(0, curloc)
+			after = $("#msgBox").val().substring(curloc)
+			console.log(before)
+			console.log(after)
+			
+			start = /([^ ,.?!]+)$/.exec(before)[1]
+			if start? and start != ""
+				matchingnicks = window.nicklist.filter((n) -> n.substring(0, start.length) == start)
+				console.log(matchingnicks)
+				if (matchingnicks.length != 0)
+					$("#msgBox").val(before + matchingnicks[0].substring(start.length) + after)
+					newloc = curloc+matchingnicks[0].length - start.length
+					$("#msgBox").caret(newloc, newloc)
+					
+	)
+			
 	
 )
