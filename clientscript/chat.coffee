@@ -160,6 +160,5 @@ $(document).ready( ->
 					$("#msgBox").caret(newloc, newloc)
 					
 	)
-			
 	
 )
