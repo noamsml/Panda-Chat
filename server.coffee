@@ -8,6 +8,8 @@ webclient = require "./webclient"
 
 gl = exports #globals
 
+#TODO: Prevent upfucking of nick list
+
 class Channel
 	constructor: ->
 		@connections = {}
@@ -30,8 +32,16 @@ class Channel
 	nickAvail: (nick) -> not (nick of @connections) and (nick.length < 20) and not /[<>@&+]/.test(nick)
 	event: (ev, source) -> @channelEvents.emit("channelevent", ev, source)
 	names: -> @connections[conn].person for conn of @connections
-	changeClientName: (client) ->
+	changeClientNick: (client, newperson) ->
+		oldperson = client.person
 		delete @connections[client.person.nick]
+		@connections[newperson.nick] = client
+		cevent = 
+				eventType: "nickChange"
+				oldperson: client.person
+				newperson : newperson
+		this.event(cevent, client)
+		
 	
 channel = new Channel()
 

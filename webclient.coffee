@@ -16,10 +16,9 @@ class ClientHandler
 	handleChannelEvent: (chevent, source) =>
 		if source != this
 			this.emitMessage(chevent)
-		else
-			console.log("Message ignored by #{@person.nick}")
-			console.log(chevent)
-
+		#else
+		#	console.log("Message ignored by #{@person.nick}")
+		#	console.log(chevent)
 	
 	disconnect: () =>
 		if @person
@@ -35,6 +34,9 @@ class ClientHandler
 				
 	
 	MESSAGE_connect: (wmsg) =>
+		if @person
+			return #Quick and dirty
+			
 		if not @passworded
 			wmsg_ret = 
 				eventType: "denied"
@@ -70,6 +72,20 @@ class ClientHandler
 			wmsg_ret =
 				eventType: "noAuth"
 		this.emitMessage(wmsg_ret)
+	
+	MESSAGE_changeNick: (wmsg) =>
+			if @channel.nickAvail(wmsg.newperson.nick)
+				@channel.changeClientNick(this, wmsg.newperson)
+				@person = wmsg.newperson
+				wmsg_ret =
+					eventType: "selfChangeNick"
+					newperson : @person
+			else
+				wmsg_ret = 
+					eventType: "badNick"
+					person: wmsg.newperson
+			this.emitMessage(wmsg_ret)
+				
 		
 	emitMessage: (message) ->
 		@webClient.send(JSON.stringify(message))
