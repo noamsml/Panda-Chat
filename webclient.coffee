@@ -24,11 +24,6 @@ class ClientHandler
 	disconnect: () =>
 		if @person
 			@channel.delClient(this)
-			cevent = 
-				eventType: "leave"
-				person: @person
-			@channel.event(cevent, this)
-		
 	
 	MESSAGE_sendmsg: (wmsg) =>
 		if @person
@@ -50,13 +45,7 @@ class ClientHandler
 				wmsg_ret =
 					eventType: "connected"
 					person: @person
-				
 				this.emitMessage(wmsg_ret)
-				
-				cevent = 
-					eventType: "join"
-					person: @person
-				@channel.event(cevent,this)
 				
 				wmsg_ret = 
 					eventType: "names"

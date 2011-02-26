@@ -16,12 +16,22 @@ class Channel
 	addClient: (client) ->
 		@connections[client.person.nick] = client
 		@channelEvents.on("channelevent", client.handleChannelEvent)
+		cevent = 
+					eventType: "join"
+					person: client.person
+		this.event(cevent, client)
 	delClient: (client) ->
 		delete @connections[client.person.nick]
 		@channelEvents.removeListener("channelevent", client.handleChannelEvent)
+		cevent = 
+				eventType: "leave"
+				person: client.person
+		this.event(cevent, client)
 	nickAvail: (nick) -> not (nick of @connections) and (nick.length < 20) and not /[<>@&+]/.test(nick)
 	event: (ev, source) -> @channelEvents.emit("channelevent", ev, source)
 	names: -> @connections[conn].person for conn of @connections
+	changeClientName: (client) ->
+		delete @connections[client.person.nick]
 	
 channel = new Channel()
 
