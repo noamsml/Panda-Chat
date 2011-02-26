@@ -132,3 +132,28 @@ display: none; /*Yes, this is how I remove elemnts*/
     clear: both; 
     visibility:hidden;
     }
+    
+  
+ #nickchangewindow
+ {
+ 	display:none;
+ 	margin: auto;
+ 	width: 98%;
+ 	background-color: #ebebeb;
+ }
+ 
+ .nch_activated
+ {
+ 	 background-color: #ebebeb;
+ }
+ 	
+ 
+ a
+ {
+ 	 color: #023A3B;
+ }
+ 
+ #nickch_close
+ {
+ 	 float: right;
+ }

@@ -10,7 +10,7 @@ $(document).ready( ->
 	
 	isScrolledBot = -> $("#msgs").height() <= $("#msgcont").height() + $("#msgcont").scrollTop()
 	
-	scrollBot = -> $("#msgcont").scrollTop($("#msgs").height()-$("#msgcont").height())
+	scrollBot = -> $("#msgcont").scrollTop($("#msgs").height()-$("#msgcont").height()+7)
 	
 	treatHTML = (msg) -> msg.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 	
@@ -31,7 +31,19 @@ $(document).ready( ->
 		$("#msgs").append("*** <i>#{nick} #{event}</i><br/>")
 		window.lastnick = null
 
-
+	
+	nickify =  ->
+			$("#nickindicator").empty()
+			$("#nickindicator").append("You're signed in as #{treatHTML(window.person.nick)} <a href='#' class='nickchange'>(Change nicknames)</a>")
+			$(".nickchange").click(->
+				event.preventDefault()
+				$(".nickchange").toggleClass("nch_activated")
+				if $("#nickchangewindow").is(":visible")
+					$("#nickchangewindow").hide()
+				else
+					$("#nickchangewindow").show()
+			)
+		
 	addPerson = (person) ->
 		nick = person.nick
 		nick2 = nick.replace("\"", "@")
@@ -52,6 +64,7 @@ $(document).ready( ->
 			$("#loadingscreen").hide()
 			$("#msgscreen").slideDown()
 			$("#msgBox").focus()
+			nickify()
 		message: (msg) ->
 			addMessage(msg.person, msg.content)
 		badNick: (msg) ->
@@ -160,5 +173,11 @@ $(document).ready( ->
 					$("#msgBox").caret(newloc, newloc)
 					
 	)
+	
+	$("#nickch_close").click( (event) ->
+			event.preventDefault()
+			$("#nickchangewindow").hide()
+			$(".nickchange").toggleClass("nch_activated")
+		)
 	
 )
