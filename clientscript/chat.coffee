@@ -106,9 +106,7 @@ $(document).ready( ->
 		#kick: (msg) ->
 		#	delNick(msg.nick)
 		#	addEvent(msg.nick, "was kicked by #{msg.op}")
-		#disconnected: (msg) ->
-		#	$("#errmsg").text("You have been disconnected")
-		#	$("#errmsg").show()
+		
 		#kicked: (msg) ->
 		#	$("#errmsg").text("You have been kicked from the channel")
 		#	$("#errmsg").show()
@@ -153,6 +151,10 @@ $(document).ready( ->
 		$("#passbox").focus()	
 	)
 	
+	socket.on("disconnect", ->
+			$("#errmsg").text("You have been disconnected")
+			$("#errmsg").show()
+	)
 	
 
 	
@@ -207,5 +209,7 @@ $(document).ready( ->
 			$("#nickchangewindow").hide()
 			$(".nickchange").toggleClass("nch_activated")
 		)
+		
+	
 	
 )
