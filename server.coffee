@@ -1,4 +1,5 @@
-http = require "http"
+express = require "express"
+#connect = require "connect" #?
 fs = require "fs"
 config = require "./config"
 coffee = require "coffee-script"
@@ -45,65 +46,42 @@ class Channel
 	
 channel = new Channel()
 
+
+	
+
 # STUFF TO DO WITH SERVING FILES
-err = (res, code, msg) ->
-	res.writeHead(code, {"Content-type" : "text/html"})
-	res.end("<html><body><h1>#{code} #{msg}</h1></body></html>")
+#err = (res, code, msg) ->
+#	res.writeHead(code, {"Content-type" : "text/html"})
+#	res.end("<html><body><h1>#{code} #{msg}</h1></body></html>")
 
-fetch_file = (fname, res, callback) ->
-	filename = config.fsroot + fname
-	fs.readFile(filename, "utf8", (error, data) ->
-		if error
-			err(res,404,"Not Found")
-		else
-			callback(res,data,filename)			
-	)
-	
-treat_static =  (res, data, filename) ->
-	ctype = if fparse = /.([a-zA-Z]+)$/.exec(filename)
-				switch fparse[1]
-					when "txt" 
-						"text/plain"
-					when "html"
-						"text/html"
-					when "jpg", "jpeg"
-						"image/jpeg"
-					when "png"
-						"image/png"
-					when "js"
-						"text/javascript"
-					else
-						"application/octet-stream" #?
-			else
-				"text/plain"
-	res.writeHead(200, {"Content-type" : ctype})
-	res.end(data)
 
-	
-treat_coffee = (res, data, filename) ->
-	try
-		jsource = coffee.compile(data)
-		res.writeHead(200, {"Content-type" : "text/javascript"})
-		res.end(jsource)
-	catch error
-		err(res,500,"CoffeScript Compilation Failed: #{error}")
 		
 
-srv = http.createServer( (req, res) ->
-	if req.url == "/"
-		fetch_file("html/index.html", res, treat_static)
-	else if parse = /^\/static((\/[^.][^\/]*)+)$/.exec(req.url)
-		fetch_file("html/#{parse[1]}", res, treat_static)
-	else if parse = /^\/script((\/[^.][^\/]*)+)[.]js$/.exec(req.url)
-		fetch_file("clientscript/#{parse[1]}.coffee", res, treat_coffee)
-	else
-		err(res, 404, "Was Not found '#{req.url}'")
-)
+app = express.createServer( )
+
+app.configure ->
+	app.use express.static(__dirname + "/html")
+	app.use express.errorHandler({dumpExceptions: true, showStack: true})
+
+app.get "/script/:fname.js", (req, res,next) ->
+	filename = __dirname + "/clientscript/#{req.params.fname}.coffee"
+	fs.readFile filename, "utf8", (error, data) ->
+		if error
+			#throw new Error("404 Not found  " + fname)
+			next(error)
+		else
+			try
+				jsource = coffee.compile(data)
+				res.writeHead(200, {"Content-type" : "text/javascript"})
+				res.end(jsource)
+			catch error
+				next(new Error("500 CoffeeScript compilation failed"))		
+	
 
 
-srv.listen(config.httport, "")
+app.listen(config.httport, "")
 
-socket = io.listen(srv)
+socket = io.listen(app)
 
 socket.on("connection", (client) ->
 	z = new webclient.ClientHandler(client, channel, config)
