@@ -11,7 +11,7 @@ class ClientHandler
 		if this["MESSAGE_" + message.msgType]?
 			this["MESSAGE_" + message.msgType](message)
 		else
-			@console.log("Bad message")
+			console.log("Bad message")
 	
 	handleChannelEvent: (chevent, source) =>
 		if source != this
